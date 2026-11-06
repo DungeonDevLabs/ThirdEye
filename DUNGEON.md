@@ -1,7 +1,7 @@
 ---
 name: ThirdEye
 icon: 👁
-status: in progress
+status: in beta tests
 tags: Android, Cameras, Kotlin
 summary_en: Android app to watch and record NETIP IP cameras, with scheduled routines and Drive sync.
 summary_pt: App Android para ver e gravar câmeras IP NETIP, com rotinas agendadas e sincronização no Drive.
