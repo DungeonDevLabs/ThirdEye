@@ -1,5 +1,7 @@
 # ThirdEye · Dungeon Dev Labs
 
+<img src="public/assets/icon.png" width="96" alt="ThirdEye app icon: a glowing cyan eye on a dark background">
+
 **English** · [Português](#português)
 
 Android app to watch and record NETIP IP cameras, with scheduled routines and Drive sync. The app code is private; this repo holds its public documents.
