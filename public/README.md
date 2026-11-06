@@ -7,6 +7,7 @@ Arquivos públicos do projeto — documentos que ficam expostos no repositório
 | Arquivo | Para que serve |
 | --- | --- |
 | [`politica-de-privacidade.md`](politica-de-privacidade.md) | Política de Privacidade do ThirdEye, usada na ficha do app na Play Store |
+| [`servico-em-primeiro-plano.md`](servico-em-primeiro-plano.md) | Texto e roteiro do vídeo para a declaração de `FOREGROUND_SERVICE_SPECIAL_USE` (*Conteúdo do app → Permissões de serviço em primeiro plano*) |
 
 ## URL para a Play Console
 
@@ -55,4 +56,4 @@ O documento foi escrito para casar com estas respostas:
 | Usuários podem solicitar exclusão? | Sim — exclusão direto no app (item 6) + e-mail de contato |
 | Dados de menores | Não |
 | Rastreamento / publicidade | Não |
-| Permissões sensíveis | `CAMERA` apenas para leitura de QR Code; `FOREGROUND_SERVICE_SPECIAL_USE` para gravação contínua (justificar o subtipo no formulário) |
+| Permissões sensíveis | `CAMERA` apenas para leitura de QR Code; `FOREGROUND_SERVICE_SPECIAL_USE` para gravação contínua (justificar o subtipo no formulário — texto pronto em [`servico-em-primeiro-plano.md`](servico-em-primeiro-plano.md)) |

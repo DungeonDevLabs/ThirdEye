@@ -2,11 +2,12 @@
 
 - **Aplicativo:** ThirdEye (`app.dungeondevlabs.thirdeye`) — Android
 - **Desenvolvedor / controlador dos dados:** DungeonDev Labs
-- **Vigência a partir de:** 3 de novembro de 2026
-- **Última atualização:** 3 de novembro de 2026
+- **Vigência a partir de:** 4 de novembro de 2026
+- **Última atualização:** 4 de novembro de 2026
 
 > Aplicativo para monitorar câmeras IP (RTSP/ONVIF) da **sua própria rede**, gravar rotinas e — se você
-> quiser — enviar os vídeos para o **seu próprio Google Drive**.
+> quiser — enviar os vídeos para o **seu próprio Google Drive** e manter a configuração igual entre os
+> seus aparelhos.
 
 ## Resumo em 30 segundos
 
@@ -15,6 +16,7 @@
 | Guarda a configuração das câmeras **no próprio aparelho** | Não cria conta no app nem envia seus dados para servidores do desenvolvedor |
 | Grava vídeos **na memória do aparelho** | Não tem anúncios, rastreadores, analytics ou SDK de crash reporting |
 | Só usa o Google Drive **se você conectar**, e envia para **a sua conta** | Não vende, aluga ou compartilha dados com terceiros para marketing |
+| Só compartilha a configuração entre os **seus** aparelhos se você ligar (pasta privada do app no Drive, sem senhas) | Não envia senha de câmera para lugar nenhum |
 
 ---
 
@@ -36,6 +38,8 @@ apenas quando você ativa esse recurso.
 | Parâmetros de vídeo (resolução, codec, taxa de quadros), presets e patrulhas PTZ | Somente no aparelho | Manter a qualidade do stream e mover a câmera |
 | Vídeos gravados (arquivos MP4) e o índice das gravações | Armazenamento privado do app (memória interna ou cartão SD) | Guardar e reproduzir as gravações da rotina |
 | Preferências da rotina: horários, duração dos blocos, dias de retenção, destino do arquivo | Somente no aparelho | Executar a gravação automática do jeito que você configurou |
+| Identificador aleatório da instalação e nome do aparelho | Somente no aparelho. O nome (mais 4 caracteres do id) aparece no nome dos vídeos que você envia ao seu Drive e, se você ligar o compartilhamento, no perfil compartilhado | Distinguir os aparelhos da mesma conta e evitar que dois aparelhos gravem com o mesmo nome de arquivo |
+| Configuração dos aparelhos compartilhada: câmeras (endereço, porta e canal), rotina, qualidades de vídeo e rondas — **sem usuário nem senha** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar o que os outros aparelhos da conta estão gravando e avisar quando a mesma câmera está em dois |
 | E-mail e nome de exibição da Conta Google conectada | Somente no aparelho | Mostrar qual conta está conectada ao Drive |
 | Token de acesso do Google (OAuth) | Gerenciado pelo Google Play Services no aparelho; o app não grava o token | Enviar, baixar e apagar vídeos no seu Drive sem pedir login toda vez |
 | Preferências de envio: enviar automaticamente, apenas em Wi-Fi, apagar do aparelho após enviar | Somente no aparelho | Respeitar o seu consumo de dados e de espaço |
@@ -49,7 +53,8 @@ arquivos pessoais nem microfone.
 ## 3. O que o app não faz
 
 - **Não temos servidor.** Nenhum dado das câmeras ou das gravações passa por nós.
-- **Não há login no app.** Não criamos conta, perfil ou identificador de usuário.
+- **Não há login no app.** Não criamos conta nem perfil de usuário. Cada instalação gera um identificador
+  aleatório no próprio aparelho, usado só para separar a configuração e os vídeos dos seus aparelhos.
 - **Sem publicidade e sem rastreamento.** O app não inclui SDKs de anúncios, analytics, attribution ou
   crash reporting (por exemplo: Firebase, AdMob, Facebook SDK).
 - **Sem venda de dados.** Não vendemos, alugamos nem cedemos dados a terceiros.
@@ -61,7 +66,7 @@ arquivos pessoais nem microfone.
 O envio para o Google Drive é **opcional** e desligado por padrão. Ele só acontece depois que você toca em
 "Conectar" e autoriza o acesso na tela do Google.
 
-**Qual permissão pedimos ao Google:** apenas o escopo
+**Qual permissão pedimos ao Google:** para os vídeos, apenas o escopo
 `https://www.googleapis.com/auth/drive.file`. Com ele o app **só enxerga os arquivos e pastas que ele mesmo
 criou** — não consegue listar, abrir ou alterar os outros arquivos da sua conta.
 
@@ -75,19 +80,37 @@ Também consultamos o espaço livre do Drive para avisar quando o armazenamento 
 os vídeos mais antigos que passarem do prazo de retenção configurado na rotina. Essas exclusões atingem
 somente arquivos criados pelo ThirdEye.
 
+### 4.1 Configuração compartilhada entre aparelhos (opcional, separada dos vídeos)
+
+Com mais de um aparelho usando a mesma conta Google, o app pode guardar a configuração de cada um na **pasta
+privada do app** no Drive (`drive.appdata`) — uma pasta que **não aparece na interface do Drive** e que só o
+ThirdEye enxerga. Isso exige um escopo adicional do Google, `https://www.googleapis.com/auth/drive.appdata`,
+pedido apenas se você ligar o compartilhamento nas configurações.
+
+- **Um arquivo por aparelho:** `thirdeye_device_<id>.json`, com o nome do aparelho, a lista de câmeras
+  (endereço, porta e canal), a rotina de gravação, as qualidades de vídeo e as rondas.
+- **O que nunca vai para lá:** usuário e senha das câmeras, vídeos e qualquer dado de outra pessoa da sua
+  rede. O arquivo leva o mínimo para outro aparelho entender o que este está gravando.
+- **Para quê:** abrir a tela no celular da sala e ver o que o tablet do quarto está configurado para gravar,
+  inclusive com um aviso quando as duas instalações apontam para a mesma câmera.
+- **Quem escreve:** cada aparelho publica apenas o próprio arquivo; os outros são somente leitura.
+- **Como sai do Drive:** desligar o compartilhamento no app apaga o arquivo daquele aparelho. O ThirdEye não
+  tem servidor, então não guarda nenhuma cópia disso.
+
 **O que é enviado ao Google fora do Drive:** nada além dos dados padrão que o Android/Google Play já troca
 com o Google para instalar e manter o app atualizado (tratados pela própria Google, segundo as políticas
 dela).
 
 > **Como revogar.** Dentro do app: *Configurações → Google Drive → Desconectar*. Fora do app: acesse
 > [myaccount.google.com/permissions](https://myaccount.google.com/permissions) e remova o acesso do
-> ThirdEye. Os vídeos já enviados continuam no seu Drive até você apagá-los.
+> ThirdEye. Os vídeos já enviados continuam no seu Drive até você apagá-los, e a configuração
+> compartilhada do aparelho continua na pasta privada até você desligar o compartilhamento.
 
 ## 5. Compartilhamento com terceiros
 
 | Com quem | O que | Quando |
 | --- | --- | --- |
-| Google (Google Drive / Google Play Services) | Os vídeos e o e-mail da conta, conforme descrito no item 4 | Somente se você conectar sua conta do Google |
+| Google (Google Drive / Google Play Services) | Os vídeos, a configuração dos aparelhos e o e-mail da conta, conforme descrito no item 4 | Somente se você conectar sua conta do Google (a configuração, só se você ligar o compartilhamento) |
 | Fabricante do aparelho / provedor do sistema (backup do Android) | Cópia dos dados do app, se o backup automático estiver ligado no aparelho | Conforme a configuração de backup do seu Android |
 | Autoridades públicas | Nada — não temos dados para fornecer; o app não envia informações para nós | — |
 
@@ -102,6 +125,8 @@ de privacidade dela.
 - **Vídeos no Google Drive:** ficam na sua conta até você apagar no app, no Drive ou até vencer o prazo de
   retenção configurado.
 - **Configuração das câmeras e preferências:** ficam no aparelho enquanto o app estiver instalado.
+- **Configuração compartilhada (se você ligar):** um arquivo por aparelho na pasta privada do app no Drive,
+  que sai de lá quando você desliga o compartilhamento naquele aparelho.
 
 **Como apagar:**
 
@@ -111,9 +136,11 @@ de privacidade dela.
 3. **Conta do Google:** *Configurações → Google Drive → Desconectar* (o app apaga o e-mail, o nome e o
    estado de conexão) e revogue o acesso em
    [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
-4. **Tudo:** desinstalar o app remove as configurações e os vídeos guardados na memória do aparelho. Vídeos
+4. **Configuração compartilhada:** desligar o compartilhamento no app apaga do Drive o arquivo daquele
+   aparelho (os arquivos dos outros aparelhos continuam, porque eles seguem compartilhando).
+5. **Tudo:** desinstalar o app remove as configurações e os vídeos guardados na memória do aparelho. Vídeos
    já enviados ao Drive precisam ser apagados lá.
-5. **Backup do Android:** se o seu aparelho mantém backup automático, pode existir uma cópia dos dados do
+6. **Backup do Android:** se o seu aparelho mantém backup automático, pode existir uma cópia dos dados do
    app no backup da sua Conta Google. Ela é controlada por você em *Configurações do Android → Google →
    Backup*.
 
@@ -123,6 +150,8 @@ de privacidade dela.
   Android e pela criptografia do aparelho. Outros apps não conseguem ler esses arquivos.
 - O acesso ao Google Drive usa OAuth 2.0 do Google; o token é gerenciado pelo Google Play Services e não é
   gravado pelo ThirdEye.
+- A configuração compartilhada usa o mesmo OAuth e vai para a pasta privada do app (`drive.appdata`), separada
+  da pasta dos vídeos; nenhuma senha de câmera entra nesse arquivo.
 - Vídeos salvos no aparelho ficam em pasta privada do app e só são compartilhados quando você usa a opção
   de abrir/compartilhar (via `FileProvider` do Android).
 - As ações sensíveis da rotina (iniciar/parar a gravação contínua) podem ser confirmadas com a sua digital
@@ -198,7 +227,7 @@ pedidos de titular e solicitações de exclusão de dados.
 
 ---
 
-*Política de Privacidade do ThirdEye · versão de 3 de novembro de 2026 · DungeonDev Labs*
+*Política de Privacidade do ThirdEye · versão de 4 de novembro de 2026 · DungeonDev Labs*
 
 *Documento redigido em português. Se houver tradução para outro idioma, a versão em português prevalece.*
 
