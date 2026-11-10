@@ -3,7 +3,7 @@
 - **Aplicativo:** ThirdEye (`app.dungeondevlabs.thirdeye`) — Android
 - **Desenvolvedor / controlador dos dados:** DungeonDev Labs
 - **Vigência a partir de:** 4 de novembro de 2026
-- **Última atualização:** 4 de novembro de 2026
+- **Última atualização:** 9 de novembro de 2026
 
 > Aplicativo para monitorar câmeras IP (RTSP/ONVIF) da **sua própria rede**, gravar rotinas e — se você
 > quiser — enviar os vídeos para o **seu próprio Google Drive** e manter a configuração igual entre os
@@ -16,7 +16,7 @@
 | Guarda a configuração das câmeras **no próprio aparelho** | Não cria conta no app nem envia seus dados para servidores do desenvolvedor |
 | Grava vídeos **na memória do aparelho** | Não tem anúncios, rastreadores, analytics ou SDK de crash reporting |
 | Só usa o Google Drive **se você conectar**, e envia para **a sua conta** | Não vende, aluga ou compartilha dados com terceiros para marketing |
-| Só compartilha a configuração entre os **seus** aparelhos se você ligar (pasta privada do app no Drive, sem senhas) | Não envia senha de câmera para lugar nenhum |
+| Só compartilha as câmeras e a configuração entre os **seus** aparelhos se você ligar (pasta privada do app no Drive; as senhas só vão **cifradas** e só se você criar a Chave das senhas) | Não envia senha de câmera em texto legível para lugar nenhum |
 
 ---
 
@@ -39,7 +39,8 @@ apenas quando você ativa esse recurso.
 | Vídeos gravados (arquivos MP4) e o índice das gravações | Armazenamento privado do app (memória interna ou cartão SD) | Guardar e reproduzir as gravações da rotina |
 | Preferências da rotina: horários, duração dos blocos, dias de retenção, destino do arquivo | Somente no aparelho | Executar a gravação automática do jeito que você configurou |
 | Identificador aleatório da instalação e nome do aparelho | Somente no aparelho. O nome (mais 4 caracteres do id) aparece no nome dos vídeos que você envia ao seu Drive e, se você ligar o compartilhamento, no perfil compartilhado | Distinguir os aparelhos da mesma conta e evitar que dois aparelhos gravem com o mesmo nome de arquivo |
-| Configuração dos aparelhos compartilhada: câmeras (endereço, porta e canal), rotina, qualidades de vídeo e rondas — **sem usuário nem senha** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar o que os outros aparelhos da conta estão gravando e avisar quando a mesma câmera está em dois |
+| Configuração compartilhada entre os seus aparelhos: câmeras (nome, endereço, porta, canal e qual aparelho é o **principal** de cada uma), rotina, qualidades de vídeo, rondas, detecção de movimento e horário do som do alarme — **sem usuário nem senha em texto legível** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar as suas câmeras em outros aparelhos e deixar que você ajuste, de qualquer um deles, o que o aparelho principal aplica na câmera |
+| Usuário e senha das câmeras, **cifrados** (AES-256) com a Chave das senhas | Pasta privada do app no seu Google Drive, **somente** se você criar a Chave das senhas. A chave fica só nos seus aparelhos e nunca vai para o Drive | Cadastrar as câmeras em outro aparelho sem digitar a senha de cada uma. Sem a chave, o conteúdo não pode ser lido por ninguém, nem por nós nem pelo Google |
 | E-mail e nome de exibição da Conta Google conectada | Somente no aparelho | Mostrar qual conta está conectada ao Drive |
 | Token de acesso do Google (OAuth) | Gerenciado pelo Google Play Services no aparelho; o app não grava o token | Enviar, baixar e apagar vídeos no seu Drive sem pedir login toda vez |
 | Preferências de envio: enviar automaticamente, apenas em Wi-Fi, apagar do aparelho após enviar | Somente no aparelho | Respeitar o seu consumo de dados e de espaço |
@@ -87,15 +88,23 @@ privada do app** no Drive (`drive.appdata`) — uma pasta que **não aparece na 
 ThirdEye enxerga. Isso exige um escopo adicional do Google, `https://www.googleapis.com/auth/drive.appdata`,
 pedido apenas se você ligar o compartilhamento nas configurações.
 
-- **Um arquivo por aparelho:** `thirdeye_device_<id>.json`, com o nome do aparelho, a lista de câmeras
-  (endereço, porta e canal), a rotina de gravação, as qualidades de vídeo e as rondas.
-- **O que nunca vai para lá:** usuário e senha das câmeras, vídeos e qualquer dado de outra pessoa da sua
-  rede. O arquivo leva o mínimo para outro aparelho entender o que este está gravando.
-- **Para quê:** abrir a tela no celular da sala e ver o que o tablet do quarto está configurado para gravar,
-  inclusive com um aviso quando as duas instalações apontam para a mesma câmera.
-- **Quem escreve:** cada aparelho publica apenas o próprio arquivo; os outros são somente leitura.
-- **Como sai do Drive:** desligar o compartilhamento no app apaga o arquivo daquele aparelho. O ThirdEye não
-  tem servidor, então não guarda nenhuma cópia disso.
+- **Dois tipos de arquivo:** `thirdeye_device_<id>.json`, um por aparelho, com a rotina de gravação (destino,
+  retenção, câmeras gravadas); e `thirdeye_cameras.json`, um só para a conta, com a lista de câmeras
+  (nome, endereço, porta e canal), o aparelho principal de cada uma, a ronda, a qualidade de vídeo, a detecção
+  de movimento e o horário do som do alarme.
+- **Senhas:** usuário e senha das câmeras só vão para lá **cifrados**, dentro de um único campo, e somente se
+  você criar a Chave das senhas. A chave (`XXXX-XXXX-XXXX-XXXX`) fica apenas nos seus aparelhos: você a digita
+  uma vez em cada aparelho novo. Sem a chave não há como ler as senhas. Vídeos e dados de outras pessoas da sua
+  rede nunca vão para lá.
+- **Para quê:** ver as suas câmeras em mais de um celular. Cada câmera tem **um aparelho principal**, o único
+  que se conecta à câmera para gravar, ouvir alarmes e aplicar ajustes. Os outros aparelhos só mostram o vídeo
+  e, se você pedir, gravam uma alteração no arquivo, que o principal aplica na câmera.
+- **Quem escreve:** qualquer um dos seus aparelhos com o compartilhamento ligado pode atualizar o arquivo das
+  câmeras e a rotina de outro aparelho. O ThirdEye não tem servidor para mediar isso: a regra é aplicada pelos
+  próprios aparelhos.
+- **Como sai do Drive:** desligar o compartilhamento no app apaga o arquivo daquele aparelho. O arquivo de
+  câmeras da conta fica na pasta privada até você removê-lo; "Parar de levar as senhas" apaga o campo cifrado
+  se a chave deste aparelho o abrir. O ThirdEye não tem servidor, então não guarda nenhuma cópia disso.
 
 **O que é enviado ao Google fora do Drive:** nada além dos dados padrão que o Android/Google Play já troca
 com o Google para instalar e manter o app atualizado (tratados pela própria Google, segundo as políticas
