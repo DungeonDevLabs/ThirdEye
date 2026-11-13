@@ -3,7 +3,7 @@
 - **Aplicativo:** ThirdEye (`app.dungeondevlabs.thirdeye`) — Android
 - **Desenvolvedor / controlador dos dados:** DungeonDev Labs
 - **Vigência a partir de:** 4 de novembro de 2026
-- **Última atualização:** 9 de novembro de 2026
+- **Última atualização:** 13 de novembro de 2026
 
 > Aplicativo para monitorar câmeras IP (RTSP/ONVIF) da **sua própria rede**, gravar rotinas e — se você
 > quiser — enviar os vídeos para o **seu próprio Google Drive** e manter a configuração igual entre os
@@ -40,6 +40,7 @@ apenas quando você ativa esse recurso.
 | Preferências da rotina: horários, duração dos blocos, dias de retenção, destino do arquivo | Somente no aparelho | Executar a gravação automática do jeito que você configurou |
 | Identificador aleatório da instalação e nome do aparelho | Somente no aparelho. O nome (mais 4 caracteres do id) aparece no nome dos vídeos que você envia ao seu Drive e, se você ligar o compartilhamento, no perfil compartilhado | Distinguir os aparelhos da mesma conta e evitar que dois aparelhos gravem com o mesmo nome de arquivo |
 | Configuração compartilhada entre os seus aparelhos: câmeras (nome, endereço, porta, canal e qual aparelho é o **principal** de cada uma), rotina, qualidades de vídeo, rondas, detecção de movimento e horário do som do alarme — **sem usuário nem senha em texto legível** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar as suas câmeras em outros aparelhos e deixar que você ajuste, de qualquer um deles, o que o aparelho principal aplica na câmera |
+| Eventos de movimento: câmera, horário e identificador do aviso; endereços locais/Tailscale do aparelho principal e token do canal direto | Pasta privada do app no seu Google Drive e, para o aviso imediato, conexão direta entre os seus aparelhos | Avisar os outros celulares da conta quando o principal detecta movimento (o vídeo da câmera não é enviado por esse aviso) |
 | Usuário e senha das câmeras, **cifrados** (AES-256) com a Chave das senhas | Pasta privada do app no seu Google Drive, **somente** se você criar a Chave das senhas. A chave fica só nos seus aparelhos e nunca vai para o Drive | Cadastrar as câmeras em outro aparelho sem digitar a senha de cada uma. Sem a chave, o conteúdo não pode ser lido por ninguém, nem por nós nem pelo Google |
 | E-mail e nome de exibição da Conta Google conectada | Somente no aparelho | Mostrar qual conta está conectada ao Drive |
 | Token de acesso do Google (OAuth) | Gerenciado pelo Google Play Services no aparelho; o app não grava o token | Enviar, baixar e apagar vídeos no seu Drive sem pedir login toda vez |
@@ -88,17 +89,21 @@ privada do app** no Drive (`drive.appdata`) — uma pasta que **não aparece na 
 ThirdEye enxerga. Isso exige um escopo adicional do Google, `https://www.googleapis.com/auth/drive.appdata`,
 pedido apenas se você ligar o compartilhamento nas configurações.
 
-- **Dois tipos de arquivo:** `thirdeye_device_<id>.json`, um por aparelho, com a rotina de gravação (destino,
-  retenção, câmeras gravadas); e `thirdeye_cameras.json`, um só para a conta, com a lista de câmeras
+- **Três tipos de arquivo:** `thirdeye_device_<id>.json`, um por aparelho, com a rotina de gravação (destino,
+  retenção, câmeras gravadas); `thirdeye_cameras.json`, um só para a conta, com a lista de câmeras
   (nome, endereço, porta e canal), o aparelho principal de cada uma, a ronda, a qualidade de vídeo, a detecção
-  de movimento e o horário do som do alarme.
+  de movimento e o horário do som do alarme; e `thirdeye_events_<id>.json`, um por aparelho principal, com os
+  últimos 20 avisos de movimento (câmera, horário e identificador, de até 1 hora), os endereços locais/Tailscale
+  do principal e um token aleatório do canal direto. O vídeo da câmera não passa por esse arquivo nem pelo
+  canal direto.
 - **Senhas:** usuário e senha das câmeras só vão para lá **cifrados**, dentro de um único campo, e somente se
   você criar a Chave das senhas. A chave (`XXXX-XXXX-XXXX-XXXX`) fica apenas nos seus aparelhos: você a digita
   uma vez em cada aparelho novo. Sem a chave não há como ler as senhas. Vídeos e dados de outras pessoas da sua
   rede nunca vão para lá.
 - **Para quê:** ver as suas câmeras em mais de um celular. Cada câmera tem **um aparelho principal**, o único
-  que se conecta à câmera para gravar, ouvir alarmes e aplicar ajustes. Os outros aparelhos só mostram o vídeo
-  e, se você pedir, gravam uma alteração no arquivo, que o principal aplica na câmera.
+  que se conecta à câmera para gravar, ouvir alarmes, detectar movimento e aplicar ajustes. Os outros aparelhos
+  só mostram o vídeo, recebem os avisos de movimento e, se você pedir, gravam uma alteração no arquivo, que o
+  principal aplica na câmera.
 - **Quem escreve:** qualquer um dos seus aparelhos com o compartilhamento ligado pode atualizar o arquivo das
   câmeras e a rotina de outro aparelho. O ThirdEye não tem servidor para mediar isso: a regra é aplicada pelos
   próprios aparelhos.
@@ -119,7 +124,7 @@ dela).
 
 | Com quem | O que | Quando |
 | --- | --- | --- |
-| Google (Google Drive / Google Play Services) | Os vídeos, a configuração dos aparelhos e o e-mail da conta, conforme descrito no item 4 | Somente se você conectar sua conta do Google (a configuração, só se você ligar o compartilhamento) |
+| Google (Google Drive / Google Play Services) | Os vídeos, a configuração dos aparelhos, os eventos de movimento e o e-mail da conta, conforme descrito no item 4 | Somente se você conectar sua conta do Google (a configuração e os eventos, só se você ligar o compartilhamento) |
 | Fabricante do aparelho / provedor do sistema (backup do Android) | Cópia dos dados do app, se o backup automático estiver ligado no aparelho | Conforme a configuração de backup do seu Android |
 | Autoridades públicas | Nada — não temos dados para fornecer; o app não envia informações para nós | — |
 
@@ -136,6 +141,9 @@ de privacidade dela.
 - **Configuração das câmeras e preferências:** ficam no aparelho enquanto o app estiver instalado.
 - **Configuração compartilhada (se você ligar):** um arquivo por aparelho na pasta privada do app no Drive,
   que sai de lá quando você desliga o compartilhamento naquele aparelho.
+- **Eventos de movimento (se você ligar):** ficam na pasta privada do app, com no máximo 20 avisos da última
+  hora; cada aviso novo substitui o arquivo do aparelho principal. Desligar o compartilhamento interrompe os
+  avisos.
 
 **Como apagar:**
 
@@ -161,6 +169,9 @@ de privacidade dela.
   gravado pelo ThirdEye.
 - A configuração compartilhada usa o mesmo OAuth e vai para a pasta privada do app (`drive.appdata`), separada
   da pasta dos vídeos; nenhuma senha de câmera entra nesse arquivo.
+- O aviso imediato de movimento usa uma conexão direta entre os seus aparelhos, na rede local ou pelo Tailscale,
+  protegida por um token aleatório. Fora do Tailscale, esse canal é HTTP sem TLS: quem estiver na mesma rede
+  pode interceptá-lo. O vídeo da câmera não trafega por ele.
 - Vídeos salvos no aparelho ficam em pasta privada do app e só são compartilhados quando você usa a opção
   de abrir/compartilhar (via `FileProvider` do Android).
 - As ações sensíveis da rotina (iniciar/parar a gravação contínua) podem ser confirmadas com a sua digital
@@ -177,8 +188,8 @@ de privacidade dela.
 | Permissão | Por quê |
 | --- | --- |
 | Internet e estado da rede/Wi-Fi | Conectar às câmeras da sua rede e ao Google Drive quando você autoriza |
-| Serviço em primeiro plano (`FOREGROUND_SERVICE` / `SPECIAL_USE`) | Manter a gravação contínua rodando em segundo plano, com aviso permanente na barra de notificações |
-| Notificações | Mostrar o aviso da gravação em andamento e o resultado dos envios |
+| Serviço em primeiro plano (`FOREGROUND_SERVICE` / `SPECIAL_USE`) | Manter a gravação contínua rodando em segundo plano e, se você ligar, a conexão para avisos de movimento, com aviso permanente na barra de notificações |
+| Notificações | Mostrar o aviso da gravação em andamento, os avisos de movimento e o resultado dos envios |
 | Manter ativo (`WAKE_LOCK`) | Evitar que o aparelho durma no meio de uma gravação |
 | Iniciar após reiniciar (`RECEIVE_BOOT_COMPLETED`) | Religar a rotina de gravação depois que o celular reinicia ou o app é atualizado |
 | Câmera | Somente para **ler o QR Code** de importação de câmeras. O app não tira fotos nem grava vídeos com a câmera do celular |
@@ -236,7 +247,7 @@ pedidos de titular e solicitações de exclusão de dados.
 
 ---
 
-*Política de Privacidade do ThirdEye · versão de 4 de novembro de 2026 · DungeonDev Labs*
+*Política de Privacidade do ThirdEye · versão de 13 de novembro de 2026 · DungeonDev Labs*
 
 *Documento redigido em português. Se houver tradução para outro idioma, a versão em português prevalece.*
 

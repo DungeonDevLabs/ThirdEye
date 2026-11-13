@@ -5,8 +5,8 @@ Documento de apoio para a declaração de **Permissões de serviço em primeiro 
 campo de descrição, o roteiro do vídeo exigido e o checklist do que precisa estar visível na gravação.
 
 Para a explicação técnica (por que `specialUse` e não `dataSync`/`mediaProcessing`/`camera`), veja os
-comentários em [`app/src/main/AndroidManifest.xml`](../app/src/main/AndroidManifest.xml) (linhas 8–10 e 54–62)
-e em `ScheduledRecordingService.kt`.
+comentários em [`app/src/main/AndroidManifest.xml`](../app/src/main/AndroidManifest.xml) (linhas 8–14 e 54–72)
+e em `ScheduledRecordingService.kt` / `MotionListenerService.kt`.
 
 ## 1. Por que `specialUse` (resumo)
 
@@ -62,6 +62,12 @@ Por que a tarefa precisa começar imediatamente e não pode ser pausada ou reini
    passa por confirmação (biometria/PIN quando configurado) e o botão "Parar" está sempre presente na
    notificação. Nada é enviado ao desenvolvedor: o destino é o Google Drive do próprio usuário ou o
    armazenamento do aparelho.
+
+Opcionalmente, no celular que apenas acompanha as câmeras, o usuário pode ligar "Manter conexão para avisos
+imediatos". Nesse caso um segundo serviço em primeiro plano mantém a conexão direta com o celular principal
+para receber os avisos de movimento, também com notificação permanente. Ele precisa rodar com o app fora da
+tela porque o movimento pode acontecer a qualquer momento; sem ele, o Android encerraria o processo e o aviso
+só apareceria quando o app fosse aberto de novo.
 ```
 
 ## 3. Versão em inglês (en-US)
@@ -103,6 +109,11 @@ Why the task must start immediately and cannot be paused or restarted:
 6) The user keeps explicit control: nothing is recorded unless the user turns the routine on, starting/stopping
    requires confirmation (biometrics/PIN when configured) and the "Stop" action is always in the notification.
    Nothing is sent to the developer: the destination is the user's own Google Drive or the device storage.
+
+Optionally, on the phone that only watches the cameras, the user can turn on "Keep connection for immediate
+alerts". A second foreground service then keeps a direct connection to the main phone to receive motion alerts,
+also with an ongoing notification. It must run while the app is not on screen because motion can happen at any
+time; without it, Android would kill the process and the alert would only appear when the app is opened again.
 ```
 
 ## 4. Campo "Link de vídeo" — roteiro
@@ -132,14 +143,16 @@ Cuidados que evitam reprovação:
 
 ## 5. Checklist antes de enviar
 
-- [ ] Subtipo no manifesto igual ao texto enviado:
-      `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` = "Gravação contínua de câmeras IP da rede local e envio ao
-      Google Drive" (`AndroidManifest.xml`, linhas 59–61).
+- [ ] Subtipos no manifesto iguais ao texto enviado:
+      `ScheduledRecordingService` = "Gravação contínua de câmeras IP da rede local e envio ao Google Drive"
+      (linhas 59–61) e `MotionListenerService` = "Conexão com o celular principal da conta para avisos imediatos
+      de movimento das câmeras" (linhas 69–71).
 - [ ] Marcar **Outro** em "Quais tarefas exigem que o app use a permissão" — nenhuma categoria pronta descreve
       gravação contínua de câmera IP.
 - [ ] Link do vídeo abre em janela anônima, sem login.
 - [ ] Descrição e política de privacidade contam a mesma história (`politica-de-privacidade.md`, item 8).
 - [ ] Notificação fixa com ação **Parar** visível no vídeo (é o que os revisores procuram primeiro).
+- [ ] Se o vídeo mostrar o aviso imediato de movimento, a notificação fixa do `MotionListenerService` também aparece.
 - [ ] Nenhuma menção a "monitoramento de terceiros": o app grava as câmeras **do próprio usuário**.
 
 ## 6. Se a Play recusar
