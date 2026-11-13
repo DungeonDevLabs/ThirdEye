@@ -16,7 +16,7 @@
 | Guarda a configuração das câmeras **no próprio aparelho** | Não cria conta no app nem envia seus dados para servidores do desenvolvedor |
 | Grava vídeos **na memória do aparelho** | Não tem anúncios, rastreadores, analytics ou SDK de crash reporting |
 | Só usa o Google Drive **se você conectar**, e envia para **a sua conta** | Não vende, aluga ou compartilha dados com terceiros para marketing |
-| Só compartilha as câmeras e a configuração entre os **seus** aparelhos se você ligar (pasta privada do app no Drive; as senhas só vão **cifradas** e só se você criar a Chave das senhas) | Não envia senha de câmera em texto legível para lugar nenhum |
+| Só compartilha as câmeras e a configuração entre os **seus** aparelhos se você ligar (pasta privada do app no Drive; as senhas só vão **cifradas**, com a chave automática da conta Google ou uma chave própria) | Não envia senha de câmera em texto legível para lugar nenhum |
 
 ---
 
@@ -41,7 +41,7 @@ apenas quando você ativa esse recurso.
 | Identificador aleatório da instalação e nome do aparelho | Somente no aparelho. O nome (mais 4 caracteres do id) aparece no nome dos vídeos que você envia ao seu Drive e, se você ligar o compartilhamento, no perfil compartilhado | Distinguir os aparelhos da mesma conta e evitar que dois aparelhos gravem com o mesmo nome de arquivo |
 | Configuração compartilhada entre os seus aparelhos: câmeras (nome, endereço, porta, canal e qual aparelho é o **principal** de cada uma), rotina, qualidades de vídeo, rondas, detecção de movimento e horário do som do alarme — **sem usuário nem senha em texto legível** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar as suas câmeras em outros aparelhos e deixar que você ajuste, de qualquer um deles, o que o aparelho principal aplica na câmera |
 | Eventos de movimento: câmera, horário e identificador do aviso; endereços locais/Tailscale do aparelho principal e token do canal direto | Pasta privada do app no seu Google Drive e, para o aviso imediato, conexão direta entre os seus aparelhos | Avisar os outros celulares da conta quando o principal detecta movimento (o vídeo da câmera não é enviado por esse aviso) |
-| Usuário e senha das câmeras, **cifrados** (AES-256) com a Chave das senhas | Pasta privada do app no seu Google Drive, **somente** se você criar a Chave das senhas. A chave fica só nos seus aparelhos e nunca vai para o Drive | Cadastrar as câmeras em outro aparelho sem digitar a senha de cada uma. Sem a chave, o conteúdo não pode ser lido por ninguém, nem por nós nem pelo Google |
+| Usuário e senha das câmeras, **cifrados** (AES-256) com a chave automática da conta Google (ou com uma chave própria, se você criar) | Pasta privada do app no seu Google Drive, **somente** se você ligar o compartilhamento. A chave automática é derivada do e-mail da conta conectada e não é uma senha secreta; a chave própria fica só nos seus aparelhos e nunca vai para o Drive | Cadastrar as câmeras em outro aparelho sem digitar a senha de cada uma. O arquivo não guarda a senha em texto legível; com uma chave própria, nem nós nem o Google temos a chave |
 | E-mail e nome de exibição da Conta Google conectada | Somente no aparelho | Mostrar qual conta está conectada ao Drive |
 | Token de acesso do Google (OAuth) | Gerenciado pelo Google Play Services no aparelho; o app não grava o token | Enviar, baixar e apagar vídeos no seu Drive sem pedir login toda vez |
 | Preferências de envio: enviar automaticamente, apenas em Wi-Fi, apagar do aparelho após enviar | Somente no aparelho | Respeitar o seu consumo de dados e de espaço |
@@ -96,10 +96,12 @@ pedido apenas se você ligar o compartilhamento nas configurações.
   últimos 20 avisos de movimento (câmera, horário e identificador, de até 1 hora), os endereços locais/Tailscale
   do principal e um token aleatório do canal direto. O vídeo da câmera não passa por esse arquivo nem pelo
   canal direto.
-- **Senhas:** usuário e senha das câmeras só vão para lá **cifrados**, dentro de um único campo, e somente se
-  você criar a Chave das senhas. A chave (`XXXX-XXXX-XXXX-XXXX`) fica apenas nos seus aparelhos: você a digita
-  uma vez em cada aparelho novo. Sem a chave não há como ler as senhas. Vídeos e dados de outras pessoas da sua
-  rede nunca vão para lá.
+- **Senhas:** usuário e senha das câmeras só vão para lá **cifrados**, dentro de um único campo. Por padrão a
+  chave é automática e derivada do e-mail da conta Google conectada, então os seus aparelhos leem o campo sem
+  você digitar nada (a pasta privada do app já é da sua conta; a cifra evita senha em texto no arquivo). Se
+  quiser exigir uma chave em cada aparelho, crie uma chave própria (`XXXX-XXXX-XXXX-XXXX`) em "Senhas das
+  câmeras": ela passa a substituir a automática, fica só nos seus aparelhos e é digitada uma vez em cada
+  aparelho novo. Vídeos e dados de outras pessoas da sua rede nunca vão para lá.
 - **Para quê:** ver as suas câmeras em mais de um celular. Cada câmera tem **um aparelho principal**, o único
   que se conecta à câmera para gravar, ouvir alarmes, detectar movimento e aplicar ajustes. Os outros aparelhos
   só mostram o vídeo, recebem os avisos de movimento e, se você pedir, gravam uma alteração no arquivo, que o
@@ -168,7 +170,8 @@ de privacidade dela.
 - O acesso ao Google Drive usa OAuth 2.0 do Google; o token é gerenciado pelo Google Play Services e não é
   gravado pelo ThirdEye.
 - A configuração compartilhada usa o mesmo OAuth e vai para a pasta privada do app (`drive.appdata`), separada
-  da pasta dos vídeos; nenhuma senha de câmera entra nesse arquivo.
+  da pasta dos vídeos; senhas de câmera só entram cifradas no campo do cofre, quando você liga o
+  compartilhamento.
 - O aviso imediato de movimento usa uma conexão direta entre os seus aparelhos, na rede local ou pelo Tailscale,
   protegida por um token aleatório. Fora do Tailscale, esse canal é HTTP sem TLS: quem estiver na mesma rede
   pode interceptá-lo. O vídeo da câmera não trafega por ele.
