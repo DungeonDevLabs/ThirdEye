@@ -56,4 +56,4 @@ O documento foi escrito para casar com estas respostas:
 | Usuários podem solicitar exclusão? | Sim — exclusão direto no app (item 6) + e-mail de contato |
 | Dados de menores | Não |
 | Rastreamento / publicidade | Não |
-| Permissões sensíveis | `CAMERA` apenas para leitura de QR Code; `FOREGROUND_SERVICE_SPECIAL_USE` para gravação contínua (justificar o subtipo no formulário — texto pronto em [`servico-em-primeiro-plano.md`](servico-em-primeiro-plano.md)) |
+| Permissões sensíveis | `CAMERA` para leitura de QR Code e, se você cadastrar, para a câmera deste celular; `RECORD_AUDIO` só quando essa câmera grava com som; `FOREGROUND_SERVICE_SPECIAL_USE` para gravação contínua das câmeras IP, com `camera`/`microphone` na opção de câmera deste celular (justificar o subtipo no formulário — texto pronto em [`servico-em-primeiro-plano.md`](servico-em-primeiro-plano.md)) |

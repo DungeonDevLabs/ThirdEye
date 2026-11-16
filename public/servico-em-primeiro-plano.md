@@ -4,8 +4,9 @@ Documento de apoio para a declaração de **Permissões de serviço em primeiro 
 (*Conteúdo do app → Permissões de serviço em primeiro plano → Uso especial*). Traz o texto pronto para o
 campo de descrição, o roteiro do vídeo exigido e o checklist do que precisa estar visível na gravação.
 
-Para a explicação técnica (por que `specialUse` e não `dataSync`/`mediaProcessing`/`camera`), veja os
-comentários em [`app/src/main/AndroidManifest.xml`](../app/src/main/AndroidManifest.xml) (linhas 8–14 e 54–72)
+Para a explicação técnica (por que `specialUse` para as câmeras IP e por que `camera`/`microphone` só entram na
+opção de câmera deste celular), veja os comentários em
+[`app/src/main/AndroidManifest.xml`](../app/src/main/AndroidManifest.xml) (linhas 8–22 e 60–78)
 e em `ScheduledRecordingService.kt` / `MotionListenerService.kt`.
 
 ## 1. Por que `specialUse` (resumo)
@@ -14,9 +15,10 @@ e em `ScheduledRecordingService.kt` / `MotionListenerService.kt`.
 | --- | --- | --- |
 | `dataSync` | **Não** | Tem limite de ~6 h a cada 24 h (Android 15+); a rotina grava 24 h por dia. Também não pode ser iniciado no boot em apps com target 35+. |
 | `mediaProcessing` | **Não** | Mesmo limite de ~6 h/24 h; é para processar mídia já existente, não para capturar stream contínuo. |
-| `camera` | **Não** | Só para a câmera física do aparelho; aqui o vídeo vem de câmera IP pela rede. |
+| `camera` | **Sim, só para a câmera física** | Declarado apenas quando o usuário cadastra a câmera do próprio celular como uma câmera da rotina. As câmeras IP pela rede continuam em `specialUse`. |
+| `microphone` | **Sim, junto de `camera`** | Usado somente quando a câmera do celular grava com som; não se aplica às câmeras IP. |
 | `connectedDevice` | **Não** | Pressupõe uma sessão de interação com um acessório/conexão; a tarefa aqui é gravar e arquivar vídeo de forma contínua. |
-| `specialUse` | **Sim** | Único tipo sem teto de tempo, com subtipo declarado no manifesto (`PROPERTY_SPECIAL_USE_FGS_SUBTYPE`). |
+| `specialUse` | **Sim** | Único tipo sem teto de tempo, com subtipo declarado no manifesto (`PROPERTY_SPECIAL_USE_FGS_SUBTYPE`). É o tipo usado pelas câmeras IP. |
 
 ## 2. Campo "Descrever o uso da permissão" — texto pronto (pt-BR)
 
@@ -31,6 +33,9 @@ para o Google Drive do próprio usuário (ou salva no aparelho, se for a opção
 o arquivo já enviado e apaga do Drive o que passou do prazo de retenção configurado. O mesmo serviço também
 executa a ronda automática de PTZ (passar pelas posições salvas da câmera). Enquanto roda, existe uma notificação
 permanente com o número de câmeras, a duração dos vídeos, o destino e o botão "Parar".
+Opcionalmente, o usuário pode cadastrar a câmera do próprio celular como uma câmera da rotina; nesse caso o
+mesmo serviço também abre a lente (e o microfone, quando o som está ligado), com os tipos `camera` e
+`microphone` do Android.
 
 Por que a tarefa precisa começar imediatamente e não pode ser pausada ou reiniciada:
 
@@ -53,10 +58,11 @@ Por que a tarefa precisa começar imediatamente e não pode ser pausada ou reini
    e não mantêm um socket RTSP aberto nem um arquivo MP4 em escrita contínua. Qualquer atraso rompe o
    encadeamento dos arquivos e abre um buraco na gravação.
 
-5) Nenhum outro tipo de serviço em primeiro plano descreve essa tarefa: dataSync e mediaProcessing têm limite de
-   6 horas por 24 horas (a rotina é contínua, sem janela); camera é exclusivo para a câmera física do aparelho
-   (o app não acessa a câmera do celular, o vídeo vem de uma câmera IP pela rede); connectedDevice pressupõe uma
-   sessão de interação com um acessório, e não gravação e arquivamento contínuos.
+5) Nenhum outro tipo de serviço em primeiro plano descreve a gravação das câmeras IP: dataSync e mediaProcessing
+   têm limite de 6 horas por 24 horas (a rotina é contínua, sem janela); camera e microphone cobrem apenas a
+   câmera física e o microfone do aparelho e são declarados só quando o usuário cadastra a câmera deste celular
+   (as câmeras IP pela rede continuam em specialUse); connectedDevice pressupõe uma sessão de interação com um
+   acessório, e não gravação e arquivamento contínuos.
 
 6) O usuário tem controle explícito e visível: o app não grava nada sem o usuário ligar a rotina, ligar/parar
    passa por confirmação (biometria/PIN quando configurado) e o botão "Parar" está sempre presente na
@@ -83,6 +89,9 @@ Drive (or saves it on the device, if that is the option the user chose), deletes
 deletes from Drive whatever is older than the retention period. The same service also runs the automatic PTZ
 tour through the saved camera positions. While it runs, an ongoing notification shows the number of cameras,
 the video length, the destination and a "Stop" button.
+Optionally, the user can add the phone's own camera as a routine camera; in that case the same service also
+opens the lens (and the microphone, when sound is on), using the Android `camera` and `microphone` service
+types.
 
 Why the task must start immediately and cannot be paused or restarted:
 
@@ -101,10 +110,11 @@ Why the task must start immediately and cannot be paused or restarted:
 4) It is not deferrable work. WorkManager/JobScheduler run "whenever the system decides", with minutes of
    latency, and cannot keep an RTSP socket open nor an MP4 file being written continuously.
 
-5) No other foreground service type describes this task: dataSync and mediaProcessing are capped at 6 hours per
-   24 hours (the routine is continuous); camera is only for the device's physical camera (the app never uses the
-   phone camera, the video comes from a network camera); connectedDevice assumes an interaction session with an
-   accessory, not continuous recording and archiving.
+5) No other foreground service type describes IP camera recording: dataSync and mediaProcessing are capped at 6
+   hours per 24 hours (the routine is continuous); camera and microphone cover only the device's physical camera
+   and microphone and are declared only when the user adds this phone's camera (IP cameras on the network stay
+   on specialUse); connectedDevice assumes an interaction session with an accessory, not continuous recording
+   and archiving.
 
 6) The user keeps explicit control: nothing is recorded unless the user turns the routine on, starting/stopping
    requires confirmation (biometrics/PIN when configured) and the "Stop" action is always in the notification.
@@ -124,7 +134,7 @@ link — não use link privado com senha (o revisor não consegue abrir).
 
 | Tempo | O que mostrar |
 | --- | --- |
-| 0:00–0:10 | App aberto na tela inicial, com as câmeras IP já cadastradas e uma prévia ao vivo tocando (deixa claro que a fonte é uma câmera de rede, não a câmera do celular). |
+| 0:00–0:10 | App aberto na tela inicial, com as câmeras IP já cadastradas e uma prévia ao vivo tocando (deixa claro que a fonte é uma câmera de rede). |
 | 0:10–0:25 | Tela **Rotina** → ligar a chave (mostrar a confirmação por biometria/PIN) → escolher as câmeras, a *Duração de cada vídeo* (ex.: 5 min, para o vídeo ficar curto) e o destino (*Google Drive*). Legenda: "o usuário liga a rotina". |
 | 0:25–0:35 | A notificação **"Gravação contínua ativa"** aparecendo na barra, com o texto "N câmera(s) • vídeos de 5 min enviados ao Drive" e o botão **Parar**. |
 | 0:35–0:50 | Sair do app (Home), apagar a tela, mostrar que a notificação **continua lá**. Se possível, mostrar o relógio andando para provar a passagem do tempo real. |
@@ -145,8 +155,10 @@ Cuidados que evitam reprovação:
 
 - [ ] Subtipos no manifesto iguais ao texto enviado:
       `ScheduledRecordingService` = "Gravação contínua de câmeras IP da rede local e envio ao Google Drive"
-      (linhas 59–61) e `MotionListenerService` = "Conexão com o celular principal da conta para avisos imediatos
-      de movimento das câmeras" (linhas 69–71).
+      (linhas 60–68) e `MotionListenerService` = "Conexão com o celular principal da conta para avisos imediatos
+      de movimento das câmeras" (linhas 70–78).
+- [ ] Tipos de serviço do `ScheduledRecordingService` = `specialUse|camera|microphone`; `camera`/`microphone`
+      valem só para a opção de câmera deste celular e não mudam a justificativa de `specialUse` das câmeras IP.
 - [ ] Marcar **Outro** em "Quais tarefas exigem que o app use a permissão" — nenhuma categoria pronta descreve
       gravação contínua de câmera IP.
 - [ ] Link do vídeo abre em janela anônima, sem login.
@@ -162,7 +174,8 @@ A recusa mais comum é "a tarefa caberia em outro tipo". Aí **não** é caso de
 
 1. o limite de 6 h/24 h de `dataSync` e `mediaProcessing` (documentação de limites de serviço em primeiro plano
    do Android 15+);
-2. que `camera` é exclusivo da câmera física do aparelho;
+2. que `camera` e `microphone` cobrem só a câmera física e o microfone do aparelho, usados apenas na opção de
+   câmera deste celular, e não as câmeras IP pela rede (essas seguem em `specialUse`);
 3. os arquivos MP4 encadeados no vídeo, provando que a gravação não tem janela nem pausa.
 
 Se ainda assim for exigido outro tipo, a alternativa é **mudar o produto**: limitar cada sessão contínua a menos

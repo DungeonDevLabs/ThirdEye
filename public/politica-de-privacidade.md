@@ -3,11 +3,11 @@
 - **Aplicativo:** ThirdEye (`app.dungeondevlabs.thirdeye`) — Android
 - **Desenvolvedor / controlador dos dados:** DungeonDev Labs
 - **Vigência a partir de:** 4 de novembro de 2026
-- **Última atualização:** 13 de novembro de 2026
+- **Última atualização:** 16 de novembro de 2026
 
-> Aplicativo para monitorar câmeras IP (RTSP/ONVIF) da **sua própria rede**, gravar rotinas e — se você
-> quiser — enviar os vídeos para o **seu próprio Google Drive** e manter a configuração igual entre os
-> seus aparelhos.
+> Aplicativo para monitorar câmeras IP (RTSP/ONVIF) da **sua própria rede** e, se você quiser, a **câmera
+> deste celular**, gravar rotinas e — se você quiser — enviar os vídeos para o **seu próprio Google Drive** e
+> manter a configuração igual entre os seus aparelhos.
 
 ## Resumo em 30 segundos
 
@@ -37,9 +37,11 @@ apenas quando você ativa esse recurso.
 | Endereço/IP, porta, protocolo, usuário e senha das câmeras; marca, modelo e canais | Somente no aparelho, no armazenamento privado do app | Conectar, autenticar e exibir as câmeras |
 | Parâmetros de vídeo (resolução, codec, taxa de quadros), presets e patrulhas PTZ | Somente no aparelho | Manter a qualidade do stream e mover a câmera |
 | Vídeos gravados (arquivos MP4) e o índice das gravações | Armazenamento privado do app (memória interna ou cartão SD) | Guardar e reproduzir as gravações da rotina |
+| Vídeo e áudio capturados pela **câmera deste celular**, quando você a cadastra como uma câmera | A captura acontece no próprio aparelho; o arquivo MP4 fica no armazenamento privado do app e só vai para o seu Google Drive se você ligar o envio | Tratar a câmera do celular como mais uma câmera da rotina, do mesmo jeito que as câmeras IP |
+| Ajustes da câmera deste celular: lente, resolução, taxa de quadros, bitrate, som | Somente no aparelho | Gravar com a qualidade que você escolheu |
 | Preferências da rotina: horários, duração dos blocos, dias de retenção, destino do arquivo | Somente no aparelho | Executar a gravação automática do jeito que você configurou |
 | Identificador aleatório da instalação e nome do aparelho | Somente no aparelho. O nome (mais 4 caracteres do id) aparece no nome dos vídeos que você envia ao seu Drive e, se você ligar o compartilhamento, no perfil compartilhado | Distinguir os aparelhos da mesma conta e evitar que dois aparelhos gravem com o mesmo nome de arquivo |
-| Configuração compartilhada entre os seus aparelhos: câmeras (nome, endereço, porta, canal e qual aparelho é o **principal** de cada uma), rotina, qualidades de vídeo, rondas, detecção de movimento e horário do som do alarme — **sem usuário nem senha em texto legível** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar as suas câmeras em outros aparelhos e deixar que você ajuste, de qualquer um deles, o que o aparelho principal aplica na câmera |
+| Configuração compartilhada entre os seus aparelhos: câmeras (nome, endereço, porta, canal, porta ONVIF, caminho do stream e qual aparelho é o **principal** de cada uma), rotina, qualidades de vídeo, rondas, detecção e rastreamento de movimento e horário do som do alarme — **sem usuário nem senha em texto legível** | Pasta privada do app no seu Google Drive, apenas se você ligar o compartilhamento | Mostrar as suas câmeras em outros aparelhos e deixar que você ajuste, de qualquer um deles, o que o aparelho principal aplica na câmera |
 | Eventos de movimento: câmera, horário e identificador do aviso; endereços locais/Tailscale do aparelho principal e token do canal direto | Pasta privada do app no seu Google Drive e, para o aviso imediato, conexão direta entre os seus aparelhos | Avisar os outros celulares da conta quando o principal detecta movimento (o vídeo da câmera não é enviado por esse aviso) |
 | Usuário e senha das câmeras, **cifrados** (AES-256) com a chave automática da conta Google (ou com uma chave própria, se você criar) | Pasta privada do app no seu Google Drive, **somente** se você ligar o compartilhamento. A chave automática é derivada do e-mail da conta conectada e não é uma senha secreta; a chave própria fica só nos seus aparelhos e nunca vai para o Drive | Cadastrar as câmeras em outro aparelho sem digitar a senha de cada uma. O arquivo não guarda a senha em texto legível; com uma chave própria, nem nós nem o Google temos a chave |
 | E-mail e nome de exibição da Conta Google conectada | Somente no aparelho | Mostrar qual conta está conectada ao Drive |
@@ -49,8 +51,11 @@ apenas quando você ativa esse recurso.
 | Resultado do diagnóstico de rede (teste de conexão com a câmera) | Exibido na tela; não é enviado para lugar nenhum | Ajudar a descobrir por que uma câmera não conecta |
 | Digital / PIN do aparelho | Processado pelo próprio Android; o app nunca recebe nem armazena esses dados | Confirmar ações sensíveis (iniciar/parar a gravação contínua) |
 
-O app não solicita nome, CPF, telefone, endereço, data de nascimento, localização, contatos, SMS,
-arquivos pessoais nem microfone.
+O app não solicita nome, CPF, telefone, endereço, data de nascimento, localização, contatos, SMS nem
+arquivos pessoais. Câmera e microfone são pedidos apenas para ler o QR Code e, se você quiser, para usar a
+**câmera deste celular** como uma câmera da rotina; nesse caso, vídeo e áudio são gravados no aparelho e só
+saem dele para o seu próprio Google Drive, se o envio estiver ligado. O app não acessa a câmera nem o
+microfone em nenhum outro momento.
 
 ## 3. O que o app não faz
 
@@ -91,11 +96,11 @@ pedido apenas se você ligar o compartilhamento nas configurações.
 
 - **Três tipos de arquivo:** `thirdeye_device_<id>.json`, um por aparelho, com a rotina de gravação (destino,
   retenção, câmeras gravadas); `thirdeye_cameras.json`, um só para a conta, com a lista de câmeras
-  (nome, endereço, porta e canal), o aparelho principal de cada uma, a ronda, a qualidade de vídeo, a detecção
-  de movimento e o horário do som do alarme; e `thirdeye_events_<id>.json`, um por aparelho principal, com os
-  últimos 20 avisos de movimento (câmera, horário e identificador, de até 1 hora), os endereços locais/Tailscale
-  do principal e um token aleatório do canal direto. O vídeo da câmera não passa por esse arquivo nem pelo
-  canal direto.
+  (nome, endereço, porta, canal, porta ONVIF e caminho do stream), o aparelho principal de cada uma, a ronda,
+  a qualidade de vídeo, a detecção e o rastreamento de movimento e o horário do som do alarme; e
+  `thirdeye_events_<id>.json`, um por aparelho principal, com os últimos 20 avisos de movimento (câmera,
+  horário e identificador, de até 1 hora), os endereços locais/Tailscale do principal e um token aleatório
+  do canal direto. O vídeo da câmera não passa por esse arquivo nem pelo canal direto.
 - **Senhas:** usuário e senha das câmeras só vão para lá **cifrados**, dentro de um único campo. Por padrão a
   chave é automática e derivada do e-mail da conta Google conectada, então os seus aparelhos leem o campo sem
   você digitar nada (a pasta privada do app já é da sua conta; a cifra evita senha em texto no arquivo). Se
@@ -167,6 +172,8 @@ de privacidade dela.
 
 - Os dados das câmeras e as preferências ficam no armazenamento privado do app, protegido pelo sandbox do
   Android e pela criptografia do aparelho. Outros apps não conseguem ler esses arquivos.
+- O vídeo e o áudio da câmera deste celular são capturados e gravados localmente; não são enviados a nós nem a
+  terceiros e só vão para o seu Drive se você ligar o envio.
 - O acesso ao Google Drive usa OAuth 2.0 do Google; o token é gerenciado pelo Google Play Services e não é
   gravado pelo ThirdEye.
 - A configuração compartilhada usa o mesmo OAuth e vai para a pasta privada do app (`drive.appdata`), separada
@@ -191,11 +198,12 @@ de privacidade dela.
 | Permissão | Por quê |
 | --- | --- |
 | Internet e estado da rede/Wi-Fi | Conectar às câmeras da sua rede e ao Google Drive quando você autoriza |
-| Serviço em primeiro plano (`FOREGROUND_SERVICE` / `SPECIAL_USE`) | Manter a gravação contínua rodando em segundo plano e, se você ligar, a conexão para avisos de movimento, com aviso permanente na barra de notificações |
+| Serviço em primeiro plano (`FOREGROUND_SERVICE` / `SPECIAL_USE`, `CAMERA` e `MICROPHONE`) | Manter a gravação contínua rodando em segundo plano e, se você ligar, a conexão para avisos de movimento, com aviso permanente na barra de notificações. Quando a câmera deste celular está na rotina, o serviço declara os tipos câmera e microfone (este só com som) exigidos pelo Android; as câmeras IP usam o tipo de uso especial |
 | Notificações | Mostrar o aviso da gravação em andamento, os avisos de movimento e o resultado dos envios |
 | Manter ativo (`WAKE_LOCK`) | Evitar que o aparelho durma no meio de uma gravação |
 | Iniciar após reiniciar (`RECEIVE_BOOT_COMPLETED`) | Religar a rotina de gravação depois que o celular reinicia ou o app é atualizado |
-| Câmera | Somente para **ler o QR Code** de importação de câmeras. O app não tira fotos nem grava vídeos com a câmera do celular |
+| Câmera | Ler o QR Code de importação de câmeras e, se você cadastrar a câmera deste celular, capturar o vídeo dela. O app não acessa a câmera em nenhum outro momento |
+| Microfone | Gravar o som junto do vídeo somente quando a câmera deste celular está na rotina com som ligado; sem essa opção o app não usa o microfone |
 
 ## 9. Crianças e adolescentes
 
@@ -250,7 +258,7 @@ pedidos de titular e solicitações de exclusão de dados.
 
 ---
 
-*Política de Privacidade do ThirdEye · versão de 13 de novembro de 2026 · DungeonDev Labs*
+*Política de Privacidade do ThirdEye · versão de 16 de novembro de 2026 · DungeonDev Labs*
 
 *Documento redigido em português. Se houver tradução para outro idioma, a versão em português prevalece.*
 

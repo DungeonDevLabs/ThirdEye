@@ -3,8 +3,8 @@ name: ThirdEye
 icon: 👁
 status: in beta tests
 tags: Android, Cameras, Kotlin
-summary_en: Android app to watch and record IP cameras (NETIP, ONVIF and RTSP), with scheduled routines, motion alerts between your phones and Drive sync.
-summary_pt: App Android para ver e gravar câmeras IP (NETIP, ONVIF e RTSP), com rotinas agendadas, avisos de movimento entre os seus celulares e sincronização no Drive.
+summary_en: Android app to watch and record IP cameras (NETIP, ONVIF and RTSP) or this phone's own camera, with scheduled routines, motion alerts between your phones and Drive sync.
+summary_pt: App Android para ver e gravar câmeras IP (NETIP, ONVIF e RTSP) ou a câmera deste celular, com rotinas agendadas, avisos de movimento entre os seus celulares e sincronização no Drive.
 preview: public/assets/cameras.jpg, public/assets/rotina.jpg
 privacy_pt: public/politica-de-privacidade.md
 ---
